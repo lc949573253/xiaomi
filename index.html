@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>xiaomi</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="css/index.css">
+	<link rel="stylesheet" type="text/css" href="css/img.css">
+	<link rel="stylesheet" type="text/css" href="css/animate.min.css">
+	<!--<script src="js/index.js"></script> -->
+
+	<script src="js/jquery.min.js"></script>
+	<script type=text/javascript>
+		// 图片轮播
+$(function () {
+
+var $container = $('#container')
+var $list = $('#list')
+var $points = $('#pointsDiv>span')
+var $prev = $('#prev')
+var $next = $('#next')
+var PAGE_WIDTH = 600 //定义一个常量，一页的宽度
+var TIME = 400  //翻页的持续时间。常量
+var ITEM_TIME = 20//单元移动的间隔时间
+var imgCount = $points.length
+var index = 0 //当前圆点的下标
+var moving = false   //标识是否正在翻页，默认为没有
+
+//点击向右或者向左的图标，平滑的切换到上（下）一页
+$next.click(function () {
+	//平滑切换到下一页
+	nextPage(true)
+})
+$prev.click(function () {
+	//平滑切换到上一页
+	nextPage(false)
+})
+
+//每隔3s，自动滑动到下一页
+var intervalId = setInterval(function () {
+	nextPage(true)
+}, 3000)
+
+//当鼠标移入图片区域时，自动切换会停止，当鼠标离开时，又开始自动切换
+$container.hover(function () {
+	//此时移入图片区域，清除定时器
+	clearInterval(intervalId)
+}, function () {
+	intervalId = setInterval(function () {
+		nextPage(true)
+	}, 3000)
+})
+
+//点击圆点切换到对应的页
+$points.click(function () {
+	//目标页的下标
+	var targetIndex = $(this).index()
+	//只有当点击的不是当前页的圆点时才翻页
+	if (targetIndex != index) {
+		nextPage(targetIndex)
+	}
+})
+
+
+/* 
+定义函数，平滑翻页
+next如果为true：上一页，
+	false：下一页
+	数值：指定下标页
+*/
+function nextPage(next) {
+	/*
+	总的偏移量：offset
+	总的时间：TIME = 400
+	单元移动的间隔时间：ITEM_TIME = 20
+	单元移动的偏移量：itemOffset = offset/(TIME/ITEM_TIME)
+
+	启动循环定时器不断更新$list和left,到达目标处停止定时器
+	*/
+	//如果正在翻页，直接结束
+	if(moving){//已经正在翻页中
+		return
+	}
+	moving = true //正在翻页的标识
+
+	var offset = 0
+	if (typeof next === 'boolean') {
+		//计算offset
+		offset = next ? -PAGE_WIDTH : PAGE_WIDTH
+	} else {
+		offset = -(next - index) * PAGE_WIDTH
+	}
+
+	var itemOffset = offset / (TIME / ITEM_TIME)
+	//得到当前的left值
+	var currLeft = $list.position().left
+	//计算出目标处的left值
+	var targetLeft = currLeft + offset
+	//启动自动循环定时器不断更新$list的left值，到达目标处停止更新定时器
+	var intervalId = setInterval(function () {
+		//计算出最新的currLeft
+		currLeft += itemOffset
+		if (currLeft === targetLeft) {//代表到达目的位置
+			//清除定时器
+			clearInterval(intervalId)
+
+			//标识翻页停止
+			moving = false
+
+			//无限循环切换，第一页的上一页为最后一页，最后一页的下一页是第一页
+			//如果到达最右边的图片（1.jpg），跳转到最左边的第2张图片（1.jpg）
+			if (currLeft === -(imgCount + 1) * PAGE_WIDTH) {
+				currLeft = -PAGE_WIDTH
+			} else if (currLeft === 0) {//如果到达最左边的图片（5.jpg），跳转到最右边的第2张图片（5.jpg）
+				currLeft = -imgCount * PAGE_WIDTH
+			}
+		}
+		//设置left
+		$list.css('left', currLeft)
+	}, ITEM_TIME)
+	//更新原点
+	updatePoints(next)
+}
+/*  更新圆点
+next为true代表是往后翻，切换下一个
+	false代表切换上一个
+
+*/
+function updatePoints(next) {
+	//计算出目标圆点的下标targetIndex
+	var targetIndex = 0
+	if (typeof next === 'boolean') {
+		if (next) {
+			targetIndex = index + 1 //[0,imgCount-1]
+			if (targetIndex === imgCount) {//相等代表看到的是1.jpg，要到第一个圆点
+				targetIndex = 0
+			}
+		} else {
+			targetIndex = index - 1
+			if (targetIndex === -1) {//此时看到的是5.jpg，到第五个圆点
+				targetIndex = imgCount - 1
+			}
+		}
+	}else{
+		targetIndex = next
+	}
+
+
+	//将当前的index的<span>的class移除
+	$points.eq(index).removeClass('on')
+	// $points[index].className = ''
+	//给目标圆点添加class = 'on'
+	$points.eq(targetIndex).addClass('on')
+	// $points[index].className = 'on'
+	//将index更新为targetIndex
+	index = targetIndex
+}
+})
+	</script>
+</head>
+
+<body>
+
+	<!-- 页面顶部 -->
+	<div id="top">
+		<div class="container"></div>
+	</div>
+	<!-- 页面头部 -->
+	<div id="header">
+		<div class="container">
+			<div class="header_left left">
+				<div class="xlwb"></div>
+				<div class="goole"></div>
+				<div id="tel">11031103</div>
+			</div>
+			<ul class="right">
+				<li><a href="">登录</a></li>
+				<li><a href="">注册</a></li>
+				<li><a href="">积分</a></li>
+				<li><a href="">帮助中心</a></li>
+				<li class="shopping"><span></span><a href="">购物车</a></li>
+			</ul>
+		</div>
+	</div>
+	<!-- 页面的导航 -->
+	<div id="nav">
+		<div class="container">
+			<div class="logo left">
+				<img src="img/logo.png">
+			</div>
+			<ul class="right">
+				<li><a href="#">首页</a></li>
+				<li><a href="#">手机</a></li>
+				<li><a href="#">配饰</a></li>
+				<li><a href="#">服务</a></li>
+				<li><a href="#">体验店</a></li>
+				<li><a href="#">软件商店</a></li>
+				<li><a href="#">ColorOS</a></li>
+			</ul>
+		</div>
+	</div>
+	<!-- 页面banner部分 -->
+	<div id="banner">
+		<div id="container">
+			<div id="list" style="left: -600px;">
+				<img src="ps/iG1.jpg" alt="5">
+				<img src="ps/iG1.jpg" alt="1">
+				<img src="ps/iG2.jpg" alt="2">
+				<img src="ps/iG3.jpg" alt="3">
+				<img src="ps/iG4.jpg" alt="4">
+				<img src="ps/iG5.jpg" alt="5">
+				<img src="ps/iG1.jpg" alt="1">
+			</div>
+			<div id="pointsDiv">
+				<span index="1" class="on"></span>
+				<span index="2"></span>
+				<span index="3"></span>
+				<span index="4"></span>
+				<span index="5"></span>
+			</div>
+			<a href="javascript:;" id="prev" class="arrow"><</a>
+					<a href="javascript:;" id="next" class="arrow">></a>
+		</div>
+	</div>
+	</div>
+	<!-- 页面明星机型部分 -->
+	<div id="star">
+		<div class="container">
+			<div class="star_top"><img src="img/明星机型.png" alt="">
+			</div>
+			<ul>
+				<li>
+					<div>
+						<img src="img/腾讯黑鲨.png" alt="">
+						<h2>腾讯黑鲨</h2>
+						<p>骁龙865处理器，120Hz刷新率</p>
+						<p class="money">&yen3999元起 立即购买<span></span></p>
+					</div>
+				</li>
+				<li class="line"></li>
+				<li>
+					<div>
+						<img src="img/Redmi 9A.png" alt="">
+						<h2>Redmi 9A</h2>
+						<p>5000mAh大电量/6.53"超大护眼屏幕 </p>
+						<p class="money">&yen499元起 立即购买<span></span></p>
+					</div>
+				</li>
+				<li class="line"></li>
+				<li>
+					<div>
+						<img src="img/小米10青春版 5G.png" alt="">
+						<h2>小米10青春版 5G</h2>
+						<p>50倍潜望式变焦/轻薄5G手机</p>
+						<p class="money">&yen1899元起 立即购买<span></span></p>
+					</div>
+				</li>
+				<li class="line"></li>
+				<li>
+					<div>
+						<img src="img/小米10.png" alt="">
+						<h2>小米10</h2>
+						<p>骁龙865处理器/一亿像素手机</p>
+						<p class="money">&yen3799元起 立即购买<span></span></p>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<!-- 页面精选配件部分 -->
+	<div id="accessory">
+		<div class="container">
+			<div class="acc_top">
+				<img src="img/精选配件.png">
+			</div>
+			<div class="acc_main">
+				<div class="acc_left left">
+					<div>
+						<img src="img/小米无线充电宝青春版.png">
+					</div>
+					<div class="acc_all">
+						<p>xiaomi手机配件</p>
+						<ul>
+							<li>耳机</li>
+							<li>移动电源</li>
+							<li>保护壳</li>
+							<li>贴膜</li>
+							<li>皮套</li>
+							<li>数据线</li>
+						</ul>
+						<h2 class="line"></h2>
+						<p class="acc">全部配件<span></span></p>
+					</div>
+					<div>
+						<img src="img/Type-c充电器65W.png">
+					</div>
+					<div>
+						<img src="img/Type-c转Lightning数据线.png">
+					</div>
+				</div>
+				<div class="acc_right right">
+					<div>
+						<img src="img/米家插线板6位基础数.png">
+					</div>
+					<div>
+						<img src="img/小米无线充电宝青春版2.png">
+					</div>
+					<div>
+						<img src="img/小米蓝牙耳机AirDots青春版.png">
+					</div>
+					<div>
+						<img src="img/小米蓝牙耳机AirDots青春版.png">
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 页面搜索部分 -->
+	<div id="world">
+		<div class="container">
+			<div class="world_top">
+				<img src="img/运动T恤.png">
+			</div>
+			<div class="world_main">
+				<div class="world_left left">
+					<div class="a1 ">
+						<img src="img/小米米家电动滑板车Pro.png">
+					</div>
+					<div class="a2 ">
+						<img src="img/小米手环4.png">
+					</div>
+					<div class="a3 ">
+						<img src="img/小米小爱触屏音箱.png">
+					</div>
+					<div class="a4 ">
+						<img src="img/米家驱蚊器基础版.png">
+					</div>
+				</div>
+				<div class="world_right right">
+					<div class="world_title">
+						<div class="news">新闻</div>
+						<div class="webset">微博</div>
+					</div>
+					<ul>
+						<li>
+							<dl>
+								<dt>
+									<img src="img/小米全面屏电视E32C.png">
+								</dt>
+								<dd>
+									全面屏设计，搭配高质量画质音质，开机关机都震撼
+								</dd>
+							</dl>
+						</li>
+						<li>
+							<dl>
+								<dt>
+									<img src="img/M]5A3GX3KR2U`[}JRK09S]B.png">
+								</dt>
+								<dd>
+									小米电视4A 60英寸 人工智能语音系统
+								</dd>
+							</dl>
+						</li>
+						<li>
+							<dl>
+								<dt>
+									<img src="img/W9`$QI@5B4V0L(M22IMOTDR.png">
+								</dt>
+								<dd>
+									Redmi 红米电视 70英寸震撼巨屏，4K画质
+								</dd>
+							</dl>
+						</li>
+						<li>
+							<dl>
+								<dt>
+									<img src="img/E4WMM@WQY0IH2OT0}}H%TGY.png">
+								</dt>
+								<dd>
+									小米全面屏电视E55A，全面屏设计，人工智能语音
+								</dd>
+							</dl>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 页面服务部分 -->
+	<div id="serve">
+		<div class="container">
+			<ul>
+				<li>
+					<dl>
+						<dt>
+							<img src="img/discount.png">
+						</dt>
+						<dd class="dd1">正品保障</dd>
+						<dd class="dd2">商品为原装产品</dd>
+					</dl>
+				</li>
+				<li>
+					<dl>
+						<dt>
+							<img src="img/数字15.png">
+						</dt>
+						<dd class="dd1">15天免费换货</dd>
+						<dd class="dd2">15天免费换货</dd>
+					</dl>
+				</li>
+				<li>
+					<dl>
+						<dt>
+							<img src="img/礼盒.png">
+						</dt>
+						<dd class="dd1">99元起包邮</dd>
+						<dd class="dd2">高效的物流直达配送</dd>
+					</dl>
+				</li>
+				<li>
+					<dl>
+						<dt>
+							<img src="img/扳手.png">
+						</dt>
+						<dd class="dd1">预约维修服务</dd>
+						<dd class="dd2">享受预约维修服务</dd>
+					</dl>
+				</li>
+				<li>
+					<dl>
+						<dt>
+							<img src="img/定位.png">
+						</dt>
+						<dd class="dd1">520余家售后网点</dd>
+						<dd class="dd2">专业保障服务就在家门口</dd>
+					</dl>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<!-- 页面的售后服务部分 -->
+	<div id="after_sale">
+		<div class="container">
+			<ul>
+				<li>
+					<ol>
+						<li><a href="#">关于我们</a></li>
+						<li><a href="#">了解小米</a></li>
+						<li><a href="#">加入小米</a></li>
+						<li><a href="#">投资者关系</a></li>
+						<li><a href="#">企业社会责任</a></li>
+					</ol>
+				</li>
+				<li>
+					<ol>
+						<li><a href="#">推荐机型</a></li>
+						<li><a href="#">腾讯黑鲨</a></li>
+						<li><a href="#">Redmi 9A</a></li>
+						<li><a href="#">小米10青春版 5G</a></li>
+						<li><a href="#">小米10</a></li>
+					</ol>
+				</li>
+				<li>
+					<ol>
+						<li><a href="#">服务支持</a></li>
+						<li><a href="#">售后政策</a></li>
+						<li><a href="#">自助服务</a></li>
+						<li><a href="#">相关下载</a></li>
+						<li><a href="#">购物指南</a></li>
+					</ol>
+				</li>
+				<li>
+					<ol>
+						<li><a href="#">会员中心</a></li>
+						<li><a href="#">产品注册</a></li>
+						<li><a href="#">会员注册</a></li>
+						<li><a href="#">会员登录</a></li>
+					</ol>
+				</li>
+				<li>
+					<ol>
+						<li><a href="#">关注我们</a></li>
+						<li><a href="#">新浪微博</a></li>
+						<li><a href="#">官方微信</a></li>
+						<li><a href="#">联系我们</a></li>
+						<li><a href="#">公益基金会</a></li>
+					</ol>
+				</li>
+				<li>
+					<ol>
+						<li>
+							<p class="num">400-100-56789</p>
+						</li>
+						<li>
+							<p>8:00-18:00（仅收市话费）</p>
+						</li>
+						<li><button>人工客服</button></li>
+					</ol>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<!-- 页面的底部 -->
+	<div id="footer">
+		<div class="container">
+			<p>
+				<img src="img/logo.png">
+				<span>© mi.com 京ICP证110507号 京ICP备1004号 京网文[2020]02-04号</span>
+				<a href="#">版权说明</a>
+				<a href="#">使用协议</a>
+				<a href="#">网站地体</a>
+				<a href="#">友情链接</a>
+				<a href="#">联系我们</a>
+			</p>
+		</div>
+	</div>
+</body>
+
+</html>
